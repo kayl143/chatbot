@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>BAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f6f4ef;
+    --card: #ffffff;
+    --line: #e7e3d8;
+    --ink: #1c2333;
+    --ink-soft: #6b7280;
+    --accent: #3654a6;
+    --accent-dark: #24407f;
+    --accent-soft: #edf1fb;
+    --error: #c0392b;
+    --error-soft: #fbeceb;
+    --online: #3ea97a;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    margin: 0;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 15% 8%, rgba(54, 84, 166, 0.06), transparent 40%),
+      radial-gradient(circle at 85% 92%, rgba(54, 84, 166, 0.05), transparent 45%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .shell {
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    max-height: 760px;
+    background: var(--card);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(28, 35, 51, 0.04), 0 18px 40px -18px rgba(28, 35, 51, 0.22);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  button { font-family: inherit; }
+  input { font-family: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- Brand mark ---------- */
+  .mark {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(145deg, var(--accent), var(--accent-dark));
+    position: relative;
+    flex-shrink: 0;
+  }
+  .mark::before,
+  .mark::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.92);
+  }
+  .mark::before { width: 9px; height: 9px; top: 9px; left: 8px; }
+  .mark::after { width: 6px; height: 6px; bottom: 8px; right: 8px; opacity: 0.7; }
+
+  /* ================= LOGIN VIEW ================= */
+  #login-view {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 36px 28px 28px;
+    overflow-y: auto;
+  }
+
+  .login-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 34px;
+  }
+  .login-brand span {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 17px;
+    letter-spacing: 0.01em;
+  }
+
+  .login-heading h1 {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+  .login-heading p {
+    margin: 0 0 26px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .tabs {
+    display: flex;
+    background: var(--paper);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    margin-bottom: 22px;
+  }
+  .tab-btn {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 9px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .tab-btn.active {
+    background: var(--card);
+    color: var(--ink);
+    box-shadow: 0 1px 3px rgba(28, 35, 51, 0.08);
+  }
+
+  .field {
+    margin-bottom: 14px;
+  }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    padding: 11px 13px;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    font-size: 14.5px;
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .field input:focus { border-color: var(--accent); }
+  .field input::placeholder { color: #b9b7ae; }
+
+  .forgot-link {
+    display: block;
+    text-align: right;
+    font-size: 12.5px;
+    color: var(--accent);
+    text-decoration: none;
+    margin: -6px 0 18px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 100%;
+  }
+
+  .primary-btn {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #fff;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .primary-btn:hover { background: var(--accent-dark); }
+  .primary-btn:active { transform: scale(0.99); }
+  .primary-btn:disabled { opacity: 0.6; cursor: default; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .divider::before,
+  .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .google-btn {
+    width: 100%;
+    padding: 11px 0;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .google-btn:hover { border-color: #cfcbbd; background: #fbfaf7; }
+  .google-btn svg { width: 17px; height: 17px; }
+
+  .guest-link {
+    text-align: center;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .guest-link:hover { color: var(--ink); }
+
+  .auth-error {
+    background: var(--error-soft);
+    color: var(--error);
+    font-size: 12.5px;
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    display: none;
+    line-height: 1.4;
+  }
+  .auth-error.show { display: block; }
+
+  .apk-note {
+    margin-top: auto;
+    padding-top: 22px;
+    font-size: 11px;
+    color: #a8a59a;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* ================= CHAT VIEW ================= */
+  #app-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+  }
+  #app-view.active { display: flex; }
+  #login-view.hidden { display: none; }
+
+  .chat-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .chat-header .app-name {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0;
+    color: var(--ink);
+    flex: 1;
+  }
+  .chat-header .status {
+    font-size: 11px;
+    color: var(--online);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chat-header .status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--online);
+  }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 6px 4px 4px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+  }
+  .user-chip:hover { background: var(--paper); }
+  .user-avatar {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .signout-icon {
+    width: 15px;
+    height: 15px;
+    color: var(--ink-soft);
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .bubble {
+    max-width: 78%;
+    padding: 10px 13px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    line-height: 1.48;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  .bubble.user {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble.assistant {
+    align-self: flex-start;
+    background: var(--paper);
+    color: var(--ink);
+    border-bottom-left-radius: 4px;
+  }
+
+  .typing-dots {
+    display: inline-flex;
+    gap: 3px;
+    padding: 3px 0;
+  }
+  .typing-dots span {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ink-soft);
+    animation: bounce 1.2s infinite ease-in-out;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  .input-bar {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .input-bar input {
+    flex: 1;
+    padding: 11px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 22px;
+    font-size: 14px;
+    outline: none;
+    background: var(--paper);
+  }
+  .input-bar input:focus { border-color: var(--accent); background: var(--card); }
+
+  .input-bar button {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    border: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  .input-bar button:hover { background: var(--accent-dark); }
+  .input-bar button:active { transform: scale(0.94); }
+  .input-bar button:disabled { opacity: 0.5; cursor: default; }
+  .input-bar button svg { width: 17px; height: 17px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .typing-dots span { animation: none; }
+    .primary-btn, .input-bar button { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ================= LOGIN VIEW ================= -->
+  <div id="login-view">
+    <div class="login-brand">
+      <div class="mark"></div>
+      <span>BAI</span>
+    </div>
+
+    <div class="login-heading">
+      <h1 id="auth-title">Welcome back</h1>
+      <p id="auth-subtitle">Sign in to keep chatting with BAI.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-mode="signin" type="button">Sign in</button>
+      <button class="tab-btn" data-mode="signup" type="button">Create account</button>
+    </div>
+
+    <div id="auth-error" class="auth-error"></div>
+
+    <form id="auth-form">
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+      </div>
+      <button type="button" id="forgot-btn" class="forgot-link">Forgot password?</button>
+      <button type="submit" id="auth-submit" class="primary-btn">Sign in</button>
+    </form>
+
+    <div class="divider">or</div>
+
+    <button type="button" id="google-btn" class="google-btn">
+      <svg viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.94v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 0 1 3.67 9c0-.59.1-1.17.28-1.7V4.97H.94A9 9 0 0 0 0 9c0 1.45.35 2.83.94 4.03l3.01-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .94 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+      Continue with Google
+    </button>
+
+    <button type="button" id="guest-btn" class="guest-link">Continue as guest</button>
+
+    <p class="apk-note">Packaging this as an APK? Google sign-in needs a Custom Tab / Chrome-backed WebView, not a plain embedded one — see the note below the code.</p>
+  </div>
+
+  <!-- ================= CHAT VIEW ================= -->
+  <div id="app-view">
+    <header class="chat-header">
+      <div class="mark"></div>
+      <p class="app-name">BAI</p>
+      <span class="status">Online</span>
+      <button id="user-chip" class="user-chip" type="button" title="Sign out">
+        <span id="user-avatar" class="user-avatar">?</span>
+        <svg class="signout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </header>
+
+    <div id="msgs" class="messages"></div>
+
+    <form id="chat-form" class="input-bar">
+      <input id="inp" type="text" placeholder="Message BAI..." autocomplete="off" />
+      <button type="submit" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<!--
+  This frontend sends chat messages to a backend proxy at BACKEND_URL.
+  Run the backend locally with `node server.js` and set GROQ_API_KEY in your environment.
+
+  Firebase Authentication note:
+  Fill in FIREBASE_CONFIG below with your project's config (Firebase console →
+  Project settings → General → Your apps → SDK setup and configuration).
+  This uses the Firebase JS SDK (modular v10) loaded from the CDN, which works
+  in a normal browser and in most Android WebView wrappers (Capacitor, Cordova,
+  WebView-based APK builders) as long as:
+    1. The WebView has JavaScript AND DOM storage enabled
+       (Android: settings.setJavaScriptEnabled(true), settings.setDomStorageEnabled(true))
+       — without DOM storage, Firebase Auth can't persist the signed-in session.
+    2. The app has the INTERNET permission.
+    3. Your Firebase project's "Authorized domains" list (Authentication → Settings)
+       includes the domain/origin your APK serves this file from.
+
+  Google Sign-In specifically: Google blocks OAuth inside a generic embedded
+  WebView for security reasons, so signInWithPopup/signInWithRedirect may fail
+  or be rejected in a stock Android WebView. If you need Google sign-in in a
+  real APK, either (a) launch it in a Chrome Custom Tab / external browser and
+  hand the result back to the app, or (b) use the native Firebase Auth Android
+  SDK via a Capacitor/Cordova plugin instead of this JS SDK for that one flow.
+  Email/password auth (used by default here) works fine in a plain WebView.
+-->
+
+<script type="module">
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getAnalytics
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signInAnonymously,
+  signInWithPopup,
+  GoogleAuthProvider,
+  sendPasswordResetEmail,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyA8YvqLAa358uBEV4bd7qbSi7wv6h1izMg",
+  authDomain: "bai-chatbot.firebaseapp.com",
+  projectId: "bai-chatbot",
+  storageBucket: "bai-chatbot.firebasestorage.app",
+  messagingSenderId: "740003846823",
+  appId: "1:740003846823:web:4d298273b15c5d63089982",
+  measurementId: "G-JP8381QHKE"
+};
+
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+// Point this at your backend proxy (server.js), not directly at Groq.
+// When the UI is served by the same Express app, a relative path keeps it portable.
+const BACKEND_URL = "/chat";
+
+// ---------------- Elements ----------------
+const loginView = document.getElementById("login-view");
+const appView = document.getElementById("app-view");
+const authForm = document.getElementById("auth-form");
+const authTitle = document.getElementById("auth-title");
+const authSubtitle = document.getElementById("auth-subtitle");
+const authSubmit = document.getElementById("auth-submit");
+const authError = document.getElementById("auth-error");
+const tabButtons = document.querySelectorAll(".tab-btn");
+const forgotBtn = document.getElementById("forgot-btn");
+const googleBtn = document.getElementById("google-btn");
+const guestBtn = document.getElementById("guest-btn");
+const userAvatar = document.getElementById("user-avatar");
+const userChip = document.getElementById("user-chip");
+
+const msgs = document.getElementById("msgs");
+const chatForm = document.getElementById("chat-form");
+const inp = document.getElementById("inp");
+const sendButton = chatForm.querySelector("button");
+
+let mode = "signin"; // or "signup"
+let history = [];
+
+// ---------------- Auth UI helpers ----------------
+function setMode(next) {
+  mode = next;
+  tabButtons.forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
+  const isSignup = mode === "signup";
+  authTitle.textContent = isSignup ? "Create your account" : "Welcome back";
+  authSubtitle.textContent = isSignup
+    ? "Set up an account to start chatting with BAI."
+    : "Sign in to keep chatting with BAI.";
+  authSubmit.textContent = isSignup ? "Create account" : "Sign in";
+  document.getElementById("password").autocomplete = isSignup ? "new-password" : "current-password";
+  hideAuthError();
+}
+
+tabButtons.forEach((btn) => btn.addEventListener("click", () => setMode(btn.dataset.mode)));
+
+function showAuthError(message) {
+  authError.textContent = message;
+  authError.classList.add("show");
+}
+function hideAuthError() {
+  authError.classList.remove("show");
+}
+
+function friendlyAuthError(err) {
+  const code = err && err.code ? err.code : "";
+  const map = {
+    "auth/invalid-email": "That email address doesn't look right.",
+    "auth/user-not-found": "No account found with that email.",
+    "auth/wrong-password": "Incorrect password. Try again.",
+    "auth/invalid-credential": "Email or password is incorrect.",
+    "auth/email-already-in-use": "An account already exists with that email.",
+    "auth/weak-password": "Use a password with at least 6 characters.",
+    "auth/popup-closed-by-user": "Sign-in was closed before finishing.",
+    "auth/network-request-failed": "Network error — check your connection."
+  };
+  return map[code] || "Something went wrong. Please try again.";
+}
+
+function setAuthSubmitting(isSubmitting) {
+  authSubmit.disabled = isSubmitting;
+  authSubmit.textContent = isSubmitting
+    ? "Please wait..."
+    : mode === "signup" ? "Create account" : "Sign in";
+}
+
+authForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  hideAuthError();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  setAuthSubmitting(true);
+  try {
+    if (mode === "signup") {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+  } catch (err) {
+    showAuthError(friendlyAuthError(err));
+  } finally {
+    setAuthSubmitting(false);
+  }
+});
+
+forgotBtn.addEventListener("click", async () => {
+  hideAuthError();
+  const email = document.getElementById("email").value.trim();
+  if (!email) {
+    showAuthError("Enter your email above first, then tap \"Forgot password?\"");
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    showAuthError("Password reset email sent — check your inbox.");
+    authError.style.color = "var(--online)";
+    authError.style.background = "#e9f7f0";
+  } catch (err) {
+    authError.style.color = "";
+    authError.style.background = "";
+    showAuthError(friendlyAuthError(err));
+  }
+});
+
+googleBtn.addEventListener("click", async () => {
+  hideAuthError();
+  try {
+    await signInWithPopup(auth, googleProvider);
+  } catch (err) {
+    showAuthError(friendlyAuthError(err));
+  }
+});
+
+guestBtn.addEventListener("click", async () => {
+  hideAuthError();
+  try {
+    await signInAnonymously(auth);
+  } catch (err) {
+    showAuthError(friendlyAuthError(err));
+  }
+});
+
+userChip.addEventListener("click", async () => {
+  await signOut(auth);
+  history = [];
+  msgs.innerHTML = "";
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginView.classList.add("hidden");
+    appView.classList.add("active");
+    const label = user.isAnonymous ? "Guest" : (user.email || "?");
+    userAvatar.textContent = label.charAt(0).toUpperCase();
+    userChip.title = `Signed in as ${label} — tap to sign out`;
+    if (!msgs.hasChildNodes()) {
+      addBubble("assistant", "Hi, I'm BAI! Ask me anything.");
+    }
+  } else {
+    appView.classList.remove("active");
+    loginView.classList.remove("hidden");
+  }
+});
+
+// ---------------- Chat logic ----------------
+function addBubble(role, text) {
+  const bubble = document.createElement("div");
+  bubble.className = "bubble " + role;
+  bubble.textContent = text;
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function addTypingBubble() {
+  const bubble = document.createElement("div");
+  bubble.className = "bubble assistant";
+  bubble.innerHTML = '<span class="typing-dots"><span></span><span></span><span></span></span>';
+  msgs.appendChild(bubble);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function setLoading(isLoading) {
+  inp.disabled = isLoading;
+  sendButton.disabled = isLoading;
+}
+
+async function sendMessage(text) {
+  addBubble("user", text);
+  history.push({ role: "user", content: text });
+
+  const thinking = addTypingBubble();
+  setLoading(true);
+
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("Not signed in");
+    }
+
+    const idToken = await user.getIdToken();
+
+    const response = await fetch(BACKEND_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ messages: history })
+    });
+
+    if (response.status === 401) {
+      throw new Error("Your session expired — sign in again.");
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText || "Backend returned " + response.status);
+    }
+
+    const data = await response.json();
+    const reply = data.reply || "Sorry, I didn't get a response.";
+    thinking.textContent = reply;
+    history.push({ role: "assistant", content: reply });
+  } catch (err) {
+    thinking.textContent = "Couldn't reach BAI. Check your connection or backend.";
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+}
+
+chatForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = "";
+  sendMessage(text);
+});
+</script>
+</body>
+</html>
