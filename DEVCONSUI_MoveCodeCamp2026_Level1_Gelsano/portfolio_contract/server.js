@@ -93,6 +93,18 @@ app.post("/chat", requireAuth, async (req, res) => {
       return res.status(400).json({ error: "Request must include a non-empty 'messages' array" });
     }
 
+    // Fixed identity so the model answers "what's your name / who made you"
+    // consistently, regardless of what the underlying model would otherwise say.
+    const systemPrompt = {
+      role: "system",
+      content:
+        "Your name is BAI, which stands for Buddy Artificial Intelligence. " +
+        "If anyone asks what your name is, or what BAI stands for, answer with " +
+        "exactly that. If anyone asks who made you, created you, or who your " +
+        "developer/author is, answer that you were made by Kylle. Keep these " +
+        "answers short and natural — don't over-explain unless asked to.",
+    };
+
     const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -101,7 +113,7 @@ app.post("/chat", requireAuth, async (req, res) => {
       },
       body: JSON.stringify({
         model: GROQ_MODEL,
-        messages,
+        messages: [systemPrompt, ...messages],
       }),
     });
 
