@@ -1,4 +1,8 @@
 // ---- Firebase Admin authentication ----
+const fs = require("fs");
+const path = require("path");
+const admin = require("firebase-admin");
+
 const SERVICE_ACCOUNT_PATH =
   process.env.FIREBASE_SERVICE_ACCOUNT_PATH ||
   path.join(__dirname, "firebase-service-account.json");
