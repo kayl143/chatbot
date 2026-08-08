@@ -14,6 +14,9 @@ const admin = require("firebase-admin");
 const app = express();
 app.use(express.json());
 
+// ---- Serve the frontend as static files ----
+app.use(express.static(path.join(__dirname, "public")));
+
 // ---- CORS ----
 // ALLOWED_ORIGINS is a comma-separated list of allowed browser origins.
 // Leave it blank to allow all origins (fine for testing, tighten before prod).
@@ -133,8 +136,13 @@ app.post("/chat", requireAuth, async (req, res) => {
   }
 });
 
-// ---- Health check (handy for Render) ----
+// ---- Serve chatbot.html at the root ----
 app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "chatbot.html"));
+});
+
+// ---- Health check (handy for Render) ----
+app.get("/health", (req, res) => {
   res.send("BAI chatbot backend is running.");
 });
 
