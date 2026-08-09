@@ -878,7 +878,7 @@ function friendlyAuthError(err) {
     "auth/popup-closed-by-user": "Sign-in was closed before finishing.",
     "auth/network-request-failed": "Network error — check your connection."
   };
-  return map[code] || "Something went wrong. Please try again.";
+  return (map[code] || "Something went wrong. Please try again.") + (code ? ` [${code}]` : "");
 }
 
 function setAuthSubmitting(isSubmitting) {
