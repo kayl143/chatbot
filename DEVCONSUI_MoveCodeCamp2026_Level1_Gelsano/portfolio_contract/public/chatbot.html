@@ -545,6 +545,32 @@
     30% { transform: translateY(-4px); opacity: 1; }
   }
 
+  .image-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--paper);
+  }
+  .image-preview img {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+  }
+  .image-preview button {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+  }
+
   .input-bar {
     display: flex;
     gap: 8px;
@@ -590,7 +616,6 @@
     .primary-btn, .input-bar button { transition: none; }
   }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
@@ -670,9 +695,6 @@
       <svg class="mark"><use href="#bai-mark"/></svg>
       <p class="app-name">BAI</p>
       <span class="status">Online</span>
-      <button id="screenshot-btn" class="icon-btn" type="button" title="Screenshot chat" aria-label="Screenshot chat">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      </button>
       <button id="user-chip" class="user-chip" type="button" title="Sign out">
         <span id="user-avatar" class="user-avatar">?</span>
         <svg class="signout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -681,7 +703,16 @@
 
     <div id="msgs" class="messages"></div>
 
+    <div id="image-preview" class="image-preview" hidden>
+      <img id="image-preview-img" alt="Selected photo" />
+      <button id="image-preview-remove" type="button" aria-label="Remove photo">&times;</button>
+    </div>
+
     <form id="chat-form" class="input-bar">
+      <button id="photo-btn" class="icon-btn" type="button" title="Take or attach a photo" aria-label="Take or attach a photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
+      <input id="photo-input" type="file" accept="image/*" capture="environment" hidden />
       <input id="inp" type="text" placeholder="Message BAI..." autocomplete="off" />
       <button type="submit" aria-label="Send">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1125,10 +1156,21 @@ newChatBtn.addEventListener("click", () => {
 });
 
 // ---------------- Chat logic ----------------
-function addBubble(role, text) {
+function addBubble(role, text, imageDataUrl) {
   const bubble = document.createElement("div");
   bubble.className = "bubble " + role;
-  bubble.textContent = text;
+  if (imageDataUrl) {
+    const img = document.createElement("img");
+    img.src = imageDataUrl;
+    img.alt = "Attached photo";
+    img.style.cssText = "display:block; max-width:220px; border-radius:12px; margin-bottom:6px;";
+    bubble.appendChild(img);
+  }
+  if (text) {
+    const textNode = document.createElement("div");
+    textNode.textContent = text;
+    bubble.appendChild(textNode);
+  }
   msgs.appendChild(bubble);
   msgs.scrollTop = msgs.scrollHeight;
   return bubble;
@@ -1148,10 +1190,10 @@ function setLoading(isLoading) {
   sendButton.disabled = isLoading;
 }
 
-async function sendMessage(text) {
+async function sendMessage(text, imageDataUrl) {
   const user = auth.currentUser;
 
-  addBubble("user", text);
+  addBubble("user", text, imageDataUrl);
   history.push({ role: "user", content: text });
   if (user && currentConvId) saveMessage(user.uid, currentConvId, "user", text);
 
@@ -1165,13 +1207,16 @@ async function sendMessage(text) {
 
     const idToken = await user.getIdToken();
 
+    const payload = { messages: history };
+    if (imageDataUrl) payload.image = imageDataUrl;
+
     const response = await fetch(BACKEND_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${idToken}`
       },
-      body: JSON.stringify({ messages: history })
+      body: JSON.stringify(payload)
     });
 
     if (response.status === 401) {
@@ -1196,61 +1241,45 @@ async function sendMessage(text) {
   }
 }
 
+// ---------- Photo capture ----------
+const photoBtn = document.getElementById("photo-btn");
+const photoInput = document.getElementById("photo-input");
+const imagePreview = document.getElementById("image-preview");
+const imagePreviewImg = document.getElementById("image-preview-img");
+const imagePreviewRemove = document.getElementById("image-preview-remove");
+let pendingImage = null;
+
+photoBtn?.addEventListener("click", () => photoInput.click());
+
+photoInput?.addEventListener("change", () => {
+  const file = photoInput.files && photoInput.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    pendingImage = reader.result;
+    imagePreviewImg.src = pendingImage;
+    imagePreview.hidden = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+imagePreviewRemove?.addEventListener("click", () => {
+  pendingImage = null;
+  photoInput.value = "";
+  imagePreview.hidden = true;
+});
+
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = inp.value.trim();
-  if (!text) return;
+  if (!text && !pendingImage) return;
   inp.value = "";
-  sendMessage(text);
-});
-
-// ---------- Screenshot chat ----------
-const screenshotBtn = document.getElementById("screenshot-btn");
-screenshotBtn?.addEventListener("click", async () => {
-  const target = document.getElementById("msgs");
-  if (!target || !target.childElementCount) return;
-
-  const originalIcon = screenshotBtn.innerHTML;
-  screenshotBtn.disabled = true;
-
-  try {
-    const canvas = await html2canvas(target, {
-      backgroundColor: getComputedStyle(document.body).getPropertyValue("--paper") || "#ffffff",
-      scale: Math.min(window.devicePixelRatio || 1, 2),
-      useCORS: true,
-    });
-
-    canvas.toBlob(async (blob) => {
-      if (!blob) return;
-      const filename = `bai-chat-${Date.now()}.png`;
-      const file = new File([blob], filename, { type: "image/png" });
-
-      // Prefer native share sheet (works well on Android/TWA) if available.
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: "BAI chat" });
-          return;
-        } catch (shareErr) {
-          // fall through to download if the user cancels or share fails
-        }
-      }
-
-      // Fallback: trigger a direct download.
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
-    }, "image/png");
-  } catch (err) {
-    console.error("Screenshot failed:", err);
-  } finally {
-    screenshotBtn.disabled = false;
-    screenshotBtn.innerHTML = originalIcon;
-  }
+  const image = pendingImage;
+  pendingImage = null;
+  photoInput.value = "";
+  imagePreview.hidden = true;
+  sendMessage(text || "What's in this photo?", image);
 });
 </script>
 </body>
