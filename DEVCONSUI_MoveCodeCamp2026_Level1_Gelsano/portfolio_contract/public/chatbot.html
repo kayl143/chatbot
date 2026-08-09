@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>BAI</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#4F46E5">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -73,42 +77,16 @@
   }
 
   /* ---------- Brand mark ---------- */
-  .mark {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
-    background: linear-gradient(145deg, var(--accent-bright), var(--accent-dark));
-    position: relative;
+  .mark, .mark-lg {
     flex-shrink: 0;
+    display: block;
   }
-  .mark::before,
-  .mark::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.92);
-  }
-  .mark::before { width: 9px; height: 9px; top: 9px; left: 8px; }
-  .mark::after { width: 6px; height: 6px; bottom: 8px; right: 8px; opacity: 0.7; }
-
+  .mark { width: 34px; height: 34px; }
   .mark-lg {
     width: 60px;
     height: 60px;
-    border-radius: 18px;
-    background: linear-gradient(145deg, var(--accent-bright), var(--accent-dark));
-    position: relative;
-    flex-shrink: 0;
-    box-shadow: 0 12px 28px -10px rgba(54, 84, 166, 0.55);
+    filter: drop-shadow(0 12px 28px rgba(54, 84, 166, 0.45));
   }
-  .mark-lg::before,
-  .mark-lg::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.95);
-  }
-  .mark-lg::before { width: 15px; height: 15px; top: 15px; left: 14px; }
-  .mark-lg::after { width: 10px; height: 10px; bottom: 13px; right: 13px; opacity: 0.75; }
 
   /* ================= LOGIN VIEW ================= */
   #login-view {
@@ -612,15 +590,34 @@
     .primary-btn, .input-bar button { transition: none; }
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="bai-mark" viewBox="0 0 100 100">
+      <linearGradient id="baiMarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#4F46E5"/>
+        <stop offset="100%" stop-color="#0EA5E9"/>
+      </linearGradient>
+      <rect width="100" height="100" rx="22" fill="url(#baiMarkGrad)"/>
+      <line x1="50" y1="23" x2="50" y2="14" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="50" cy="10" r="4.5" fill="#FFD166"/>
+      <rect x="27" y="24" width="46" height="38" rx="14" fill="#FFFFFF"/>
+      <circle cx="40" cy="41" r="4.5" fill="#4F46E5"/>
+      <circle cx="60" cy="41" r="4.5" fill="#4F46E5"/>
+      <path d="M 40 50 Q 50 58 60 50" stroke="#4F46E5" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+    </symbol>
+  </defs>
+</svg>
 
 <div class="shell">
 
   <!-- ================= LOGIN VIEW ================= -->
   <div id="login-view">
     <div class="hero">
-      <div class="mark-lg"></div>
+      <svg class="mark-lg"><use href="#bai-mark"/></svg>
       <h1 class="wordmark">BAI</h1>
       <p class="tagline">Buddy Artificial Intelligence</p>
     </div>
@@ -670,9 +667,12 @@
       <button id="history-btn" class="icon-btn" type="button" title="Chat history" aria-label="Chat history">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="14" y2="18"/></svg>
       </button>
-      <div class="mark"></div>
+      <svg class="mark"><use href="#bai-mark"/></svg>
       <p class="app-name">BAI</p>
       <span class="status">Online</span>
+      <button id="screenshot-btn" class="icon-btn" type="button" title="Screenshot chat" aria-label="Screenshot chat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      </button>
       <button id="user-chip" class="user-chip" type="button" title="Sign out">
         <span id="user-avatar" class="user-avatar">?</span>
         <svg class="signout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1202,6 +1202,55 @@ chatForm.addEventListener("submit", (e) => {
   if (!text) return;
   inp.value = "";
   sendMessage(text);
+});
+
+// ---------- Screenshot chat ----------
+const screenshotBtn = document.getElementById("screenshot-btn");
+screenshotBtn?.addEventListener("click", async () => {
+  const target = document.getElementById("msgs");
+  if (!target || !target.childElementCount) return;
+
+  const originalIcon = screenshotBtn.innerHTML;
+  screenshotBtn.disabled = true;
+
+  try {
+    const canvas = await html2canvas(target, {
+      backgroundColor: getComputedStyle(document.body).getPropertyValue("--paper") || "#ffffff",
+      scale: Math.min(window.devicePixelRatio || 1, 2),
+      useCORS: true,
+    });
+
+    canvas.toBlob(async (blob) => {
+      if (!blob) return;
+      const filename = `bai-chat-${Date.now()}.png`;
+      const file = new File([blob], filename, { type: "image/png" });
+
+      // Prefer native share sheet (works well on Android/TWA) if available.
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: "BAI chat" });
+          return;
+        } catch (shareErr) {
+          // fall through to download if the user cancels or share fails
+        }
+      }
+
+      // Fallback: trigger a direct download.
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, "image/png");
+  } catch (err) {
+    console.error("Screenshot failed:", err);
+  } finally {
+    screenshotBtn.disabled = false;
+    screenshotBtn.innerHTML = originalIcon;
+  }
 });
 </script>
 </body>
