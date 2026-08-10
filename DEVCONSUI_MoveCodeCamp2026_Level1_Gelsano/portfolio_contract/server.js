@@ -12,7 +12,7 @@ const cors = require("cors");
 const admin = require("firebase-admin");
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
 
 // ---- Serve the frontend as static files ----
 app.use(express.static(path.join(__dirname, "public")));
@@ -84,6 +84,8 @@ try {
 // ---- Groq chat endpoint ----
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_MODEL = process.env.GROQ_MODEL || "llama-3.3-70b-versatile";
+// Vision-capable Groq model, used only when the request includes a photo.
+const GROQ_VISION_MODEL = process.env.GROQ_VISION_MODEL || "meta-llama/llama-4-scout-17b-16e-instruct";
 
 app.post("/chat", requireAuth, async (req, res) => {
   try {
@@ -91,10 +93,15 @@ app.post("/chat", requireAuth, async (req, res) => {
       return res.status(500).json({ error: "Server is missing GROQ_API_KEY" });
     }
 
-    const { messages } = req.body;
+    const { messages, image, images } = req.body;
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: "Request must include a non-empty 'messages' array" });
     }
+
+    // Accept either a single 'image' (legacy) or an 'images' array (new, multi-photo).
+    const photoList = Array.isArray(images) && images.length
+      ? images
+      : (image ? [image] : []);
 
     // Fixed identity so the model answers "what's your name / who made you"
     // consistently, regardless of what the underlying model would otherwise say.
@@ -108,6 +115,28 @@ app.post("/chat", requireAuth, async (req, res) => {
         "answers short and natural — don't over-explain unless asked to.",
     };
 
+    // If the latest message includes one or more photos, reformat it as
+    // multimodal content and switch to a vision-capable model just for
+    // this request.
+    let outgoingMessages = [systemPrompt, ...messages];
+    let model = GROQ_MODEL;
+
+    if (photoList.length) {
+      const lastIndex = outgoingMessages.length - 1;
+      const lastMessage = outgoingMessages[lastIndex];
+
+      if (lastMessage && lastMessage.role === "user") {
+        outgoingMessages[lastIndex] = {
+          role: "user",
+          content: [
+            { type: "text", text: lastMessage.content || "What's in this photo?" },
+            ...photoList.map((url) => ({ type: "image_url", image_url: { url } })),
+          ],
+        };
+        model = GROQ_VISION_MODEL;
+      }
+    }
+
     const groqResponse = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -115,8 +144,8 @@ app.post("/chat", requireAuth, async (req, res) => {
         Authorization: `Bearer ${GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [systemPrompt, ...messages],
+        model,
+        messages: outgoingMessages,
       }),
     });
 

@@ -547,28 +547,38 @@
 
   .image-preview {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     padding: 8px 16px;
     background: var(--paper);
+    overflow-x: auto;
   }
-  .image-preview img {
+  .image-preview-item {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .image-preview-item img {
     width: 48px;
     height: 48px;
     object-fit: cover;
     border-radius: 10px;
     border: 1px solid var(--line);
+    display: block;
   }
-  .image-preview button {
-    width: 22px;
-    height: 22px;
+  .image-preview-item button {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     border: none;
     background: var(--ink);
     color: #fff;
-    font-size: 15px;
+    font-size: 13px;
     line-height: 1;
     cursor: pointer;
+    padding: 0;
   }
 
   .input-bar {
@@ -703,16 +713,13 @@
 
     <div id="msgs" class="messages"></div>
 
-    <div id="image-preview" class="image-preview" hidden>
-      <img id="image-preview-img" alt="Selected photo" />
-      <button id="image-preview-remove" type="button" aria-label="Remove photo">&times;</button>
-    </div>
+    <div id="image-preview" class="image-preview" hidden></div>
 
     <form id="chat-form" class="input-bar">
       <button id="photo-btn" class="icon-btn" type="button" title="Take or attach a photo" aria-label="Take or attach a photo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </button>
-      <input id="photo-input" type="file" accept="image/*" capture="environment" hidden />
+      <input id="photo-input" type="file" accept="image/*" capture="environment" multiple hidden />
       <input id="inp" type="text" placeholder="Message BAI..." autocomplete="off" />
       <button type="submit" aria-label="Send">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1156,15 +1163,21 @@ newChatBtn.addEventListener("click", () => {
 });
 
 // ---------------- Chat logic ----------------
-function addBubble(role, text, imageDataUrl) {
+function addBubble(role, text, imageDataUrls) {
   const bubble = document.createElement("div");
   bubble.className = "bubble " + role;
-  if (imageDataUrl) {
-    const img = document.createElement("img");
-    img.src = imageDataUrl;
-    img.alt = "Attached photo";
-    img.style.cssText = "display:block; max-width:220px; border-radius:12px; margin-bottom:6px;";
-    bubble.appendChild(img);
+  const images = Array.isArray(imageDataUrls) ? imageDataUrls : (imageDataUrls ? [imageDataUrls] : []);
+  if (images.length) {
+    const grid = document.createElement("div");
+    grid.style.cssText = "display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px;";
+    images.forEach((src) => {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "Attached photo";
+      img.style.cssText = "display:block; width:110px; height:110px; object-fit:cover; border-radius:12px;";
+      grid.appendChild(img);
+    });
+    bubble.appendChild(grid);
   }
   if (text) {
     const textNode = document.createElement("div");
@@ -1190,10 +1203,11 @@ function setLoading(isLoading) {
   sendButton.disabled = isLoading;
 }
 
-async function sendMessage(text, imageDataUrl) {
+async function sendMessage(text, imageDataUrls) {
   const user = auth.currentUser;
+  const images = Array.isArray(imageDataUrls) ? imageDataUrls : (imageDataUrls ? [imageDataUrls] : []);
 
-  addBubble("user", text, imageDataUrl);
+  addBubble("user", text, images);
   history.push({ role: "user", content: text });
   if (user && currentConvId) saveMessage(user.uid, currentConvId, "user", text);
 
@@ -1208,7 +1222,7 @@ async function sendMessage(text, imageDataUrl) {
     const idToken = await user.getIdToken();
 
     const payload = { messages: history };
-    if (imageDataUrl) payload.image = imageDataUrl;
+    if (images.length) payload.images = images;
 
     const response = await fetch(BACKEND_URL, {
       method: "POST",
@@ -1245,9 +1259,8 @@ async function sendMessage(text, imageDataUrl) {
 const photoBtn = document.getElementById("photo-btn");
 const photoInput = document.getElementById("photo-input");
 const imagePreview = document.getElementById("image-preview");
-const imagePreviewImg = document.getElementById("image-preview-img");
-const imagePreviewRemove = document.getElementById("image-preview-remove");
-let pendingImage = null;
+const MAX_PHOTOS = 4;
+let pendingImages = [];
 
 photoBtn?.addEventListener("click", () => photoInput.click());
 
@@ -1313,38 +1326,72 @@ async function resizeImageFile(file, maxDimension = 900, quality = 0.7) {
   });
 }
 
+function renderImagePreview() {
+  imagePreview.innerHTML = "";
+
+  pendingImages.forEach((dataUrl, index) => {
+    const item = document.createElement("div");
+    item.className = "image-preview-item";
+
+    const img = document.createElement("img");
+    img.src = dataUrl;
+    img.alt = `Selected photo ${index + 1}`;
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.setAttribute("aria-label", "Remove photo");
+    removeBtn.innerHTML = "&times;";
+    removeBtn.addEventListener("click", () => {
+      pendingImages.splice(index, 1);
+      renderImagePreview();
+    });
+
+    item.appendChild(img);
+    item.appendChild(removeBtn);
+    imagePreview.appendChild(item);
+  });
+
+  imagePreview.hidden = pendingImages.length === 0;
+}
+
 photoInput?.addEventListener("change", async () => {
-  const file = photoInput.files && photoInput.files[0];
-  if (!file) return;
+  const files = Array.from(photoInput.files || []);
+  if (!files.length) return;
+
+  const room = MAX_PHOTOS - pendingImages.length;
+  if (room <= 0) {
+    alert(`You can attach up to ${MAX_PHOTOS} photos at a time.`);
+    photoInput.value = "";
+    return;
+  }
+
+  const filesToProcess = files.slice(0, room);
+  if (files.length > room) {
+    alert(`Only the first ${room} photo(s) were added (max ${MAX_PHOTOS} per message).`);
+  }
 
   try {
-    pendingImage = await resizeImageFile(file);
-    imagePreviewImg.src = pendingImage;
-    imagePreview.hidden = false;
+    const resized = await Promise.all(filesToProcess.map((f) => resizeImageFile(f)));
+    pendingImages.push(...resized);
+    renderImagePreview();
   } catch (err) {
     console.error("Photo processing failed:", err);
-    alert("Couldn't load that photo. Please try again.");
+    alert("Couldn't load one of those photos. Please try again.");
   } finally {
     photoInput.value = "";
   }
 });
 
-imagePreviewRemove?.addEventListener("click", () => {
-  pendingImage = null;
-  photoInput.value = "";
-  imagePreview.hidden = true;
-});
-
 chatForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const text = inp.value.trim();
-  if (!text && !pendingImage) return;
+  if (!text && !pendingImages.length) return;
   inp.value = "";
-  const image = pendingImage;
-  pendingImage = null;
+  const imagesToSend = pendingImages;
+  pendingImages = [];
   photoInput.value = "";
-  imagePreview.hidden = true;
-  sendMessage(text || "What's in this photo?", image);
+  renderImagePreview();
+  sendMessage(text || "What's in this photo?", imagesToSend);
 });
 </script>
 </body>
