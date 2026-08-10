@@ -1251,7 +1251,34 @@ let pendingImage = null;
 
 photoBtn?.addEventListener("click", () => photoInput.click());
 
-function resizeImageFile(file, maxDimension = 1024, quality = 0.75) {
+async function resizeImageFile(file, maxDimension = 900, quality = 0.7) {
+  // Preferred path: createImageBitmap can downscale WHILE decoding, so the
+  // browser never has to hold the full original (often 12-50MP) photo in
+  // memory at once. This is what avoids the "not enough memory" crash on
+  // phones/WebViews with limited heap.
+  if ("createImageBitmap" in window) {
+    try {
+      const bitmap = await createImageBitmap(file, {
+        resizeWidth: maxDimension,
+        resizeQuality: "medium",
+      });
+
+      const canvas = document.createElement("canvas");
+      canvas.width = bitmap.width;
+      canvas.height = bitmap.height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0);
+      bitmap.close();
+
+      return canvas.toDataURL("image/jpeg", quality);
+    } catch (err) {
+      console.warn("createImageBitmap resize failed, falling back:", err);
+      // fall through to the <img>-based method below
+    }
+  }
+
+  // Fallback for older/unsupported browsers: decodes the full image first,
+  // so it's more memory-hungry, but still works.
   return new Promise((resolve, reject) => {
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
