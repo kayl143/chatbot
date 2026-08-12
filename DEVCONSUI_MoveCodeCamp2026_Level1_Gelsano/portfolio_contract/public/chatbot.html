@@ -13,19 +13,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --paper: #f6f4ef;
+    --paper: #f4f6fd;
     --card: #ffffff;
-    --line: #e7e3d8;
-    --ink: #1c2333;
-    --ink-soft: #6b7280;
-    --accent: #3654a6;
-    --accent-dark: #24407f;
-    --accent-bright: #5b7fd6;
-    --accent-soft: #edf1fb;
-    --coral: #e8815f;
+    --line: #e2e6f5;
+    --ink: #1a1d3a;
+    --ink-soft: #6b7099;
+    --accent: #4f46e5;
+    --accent-dark: #3730a3;
+    --accent-bright: #0ea5e9;
+    --accent-soft: #eef1ff;
+    --coral: #ffd166;
     --error: #c0392b;
     --error-soft: #fbeceb;
-    --online: #3ea97a;
+    --online: #22c55e;
     --radius-lg: 22px;
     --radius-md: 12px;
     --radius-sm: 8px;
@@ -44,8 +44,8 @@
     font-family: var(--font-body);
     background: var(--paper);
     background-image:
-      radial-gradient(circle at 15% 8%, rgba(54, 84, 166, 0.07), transparent 42%),
-      radial-gradient(circle at 88% 90%, rgba(232, 129, 95, 0.06), transparent 45%);
+      radial-gradient(circle at 12% 6%, rgba(79, 70, 229, 0.14), transparent 45%),
+      radial-gradient(circle at 90% 92%, rgba(14, 165, 233, 0.12), transparent 48%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -85,7 +85,7 @@
   .mark-lg {
     width: 60px;
     height: 60px;
-    filter: drop-shadow(0 12px 28px rgba(54, 84, 166, 0.45));
+    filter: drop-shadow(0 12px 28px rgba(79, 70, 229, 0.45));
   }
 
   /* ================= LOGIN VIEW ================= */
@@ -513,10 +513,10 @@
   }
   .bubble.user {
     align-self: flex-end;
-    background: linear-gradient(145deg, var(--accent-bright), var(--accent));
+    background: linear-gradient(135deg, var(--accent), var(--accent-bright));
     color: #fff;
     border-bottom-right-radius: 4px;
-    box-shadow: 0 4px 12px -6px rgba(54, 84, 166, 0.5);
+    box-shadow: 0 6px 16px -6px rgba(79, 70, 229, 0.45);
   }
   .bubble.assistant {
     align-self: flex-start;
@@ -525,6 +525,32 @@
     border: 1px solid var(--line);
     border-bottom-left-radius: 4px;
   }
+
+  .suggested-prompts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 2px 8px;
+    animation: fadeUp 0.25s ease both;
+  }
+  .suggested-chip {
+    border: 1px solid var(--accent-soft);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 0.1s ease, background 0.15s ease, color 0.15s ease;
+  }
+  .suggested-chip:hover {
+    background: linear-gradient(135deg, var(--accent), var(--accent-bright));
+    color: #fff;
+    border-color: transparent;
+  }
+  .suggested-chip:active { transform: scale(0.96); }
 
   .typing-dots {
     display: inline-flex;
@@ -614,9 +640,9 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.1s ease, box-shadow 0.15s ease;
-    box-shadow: 0 4px 12px -4px rgba(54, 84, 166, 0.55);
+    box-shadow: 0 4px 12px -4px rgba(79, 70, 229, 0.55);
   }
-  .input-bar button:hover { box-shadow: 0 6px 16px -4px rgba(54, 84, 166, 0.65); }
+  .input-bar button:hover { box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.65); }
   .input-bar button:active { transform: scale(0.94); }
   .input-bar button:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
   .input-bar button svg { width: 17px; height: 17px; }
@@ -1060,6 +1086,7 @@ async function openMostRecentOrNewConversation(uid) {
     console.error("Failed to load conversations:", err);
     msgs.innerHTML = "";
     addBubble("assistant", "Hi, I'm BAI! Ask me anything.");
+    addSuggestedPrompts();
   }
 }
 
@@ -1073,6 +1100,7 @@ async function startNewConversation(uid) {
   history = [];
   msgs.innerHTML = "";
   addBubble("assistant", "Hi, I'm BAI! Ask me anything.");
+    addSuggestedPrompts();
   closeDrawer();
 }
 
@@ -1093,6 +1121,7 @@ async function loadConversation(uid, convId) {
   }
   if (!msgs.hasChildNodes()) {
     addBubble("assistant", "Hi, I'm BAI! Ask me anything.");
+    addSuggestedPrompts();
   }
   closeDrawer();
 }
@@ -1163,6 +1192,33 @@ newChatBtn.addEventListener("click", () => {
 });
 
 // ---------------- Chat logic ----------------
+const SUGGESTED_PROMPTS = [
+  "What can you help me with?",
+  "Give me a fun fact",
+  "Help me write a message",
+  "Tell me a joke",
+];
+
+function addSuggestedPrompts() {
+  const wrap = document.createElement("div");
+  wrap.className = "suggested-prompts";
+
+  SUGGESTED_PROMPTS.forEach((prompt) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "suggested-chip";
+    chip.textContent = prompt;
+    chip.addEventListener("click", () => {
+      wrap.remove();
+      sendMessage(prompt);
+    });
+    wrap.appendChild(chip);
+  });
+
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
 function addBubble(role, text, imageDataUrls) {
   const bubble = document.createElement("div");
   bubble.className = "bubble " + role;
