@@ -112,7 +112,15 @@ app.post("/chat", requireAuth, async (req, res) => {
         "If anyone asks what your name is, or what BAI stands for, answer with " +
         "exactly that. If anyone asks who made you, created you, or who your " +
         "developer/author is, answer that you were made by Kylle. Keep these " +
-        "answers short and natural — don't over-explain unless asked to.",
+        "answers short and natural — don't over-explain unless asked to. " +
+        "Never show your internal reasoning, thinking process, or planning steps " +
+        "— only give your final answer. When someone shares a photo, describe it " +
+        "the way a person would casually describe it to a friend: in plain, " +
+        "flowing sentences, not a numbered list or labeled breakdown (no 'Main " +
+        "subject:', 'Notable feature:', etc.). Mention what stands out first, " +
+        "then add a bit of natural detail if it's relevant. Keep it warm and " +
+        "conversational, and only go longer than a few sentences if the person " +
+        "asks for more detail.",
     };
 
     // If the latest message includes one or more photos, reformat it as
@@ -156,7 +164,13 @@ app.post("/chat", requireAuth, async (req, res) => {
     }
 
     const data = await groqResponse.json();
-    const reply = data.choices?.[0]?.message?.content ?? "Sorry, I didn't get a response.";
+    let reply = data.choices?.[0]?.message?.content ?? "Sorry, I didn't get a response.";
+
+    // Some Groq models (like Qwen's reasoning models) include their internal
+    // "thinking" trace wrapped in <think>...</think> tags. Strip that out so
+    // only the final answer is shown to the user.
+    reply = reply.replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
+    if (!reply) reply = "Sorry, I didn't get a response.";
 
     res.json({ reply });
   } catch (err) {
