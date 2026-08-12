@@ -526,6 +526,15 @@
     border-bottom-left-radius: 4px;
   }
 
+  .suggested-prompts-fixed {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+  }
+
   .suggested-prompts {
     display: flex;
     flex-wrap: wrap;
@@ -740,6 +749,8 @@
     <div id="msgs" class="messages"></div>
 
     <div id="image-preview" class="image-preview" hidden></div>
+
+    <div id="suggested-prompts-fixed" class="suggested-prompts-fixed" hidden></div>
 
     <form id="chat-form" class="input-bar">
       <button id="photo-btn" class="icon-btn" type="button" title="Take or attach a photo" aria-label="Take or attach a photo">
@@ -1107,6 +1118,7 @@ async function startNewConversation(uid) {
 async function loadConversation(uid, convId) {
   currentConvId = convId;
   msgs.innerHTML = "";
+  hideSuggestedPrompts();
   history = [];
   try {
     const q = query(messagesCollection(uid, convId), orderBy("createdAt", "asc"));
@@ -1199,9 +1211,10 @@ const SUGGESTED_PROMPTS = [
   "Tell me a joke",
 ];
 
+const suggestedPromptsFixed = document.getElementById("suggested-prompts-fixed");
+
 function addSuggestedPrompts() {
-  const wrap = document.createElement("div");
-  wrap.className = "suggested-prompts";
+  suggestedPromptsFixed.innerHTML = "";
 
   SUGGESTED_PROMPTS.forEach((prompt) => {
     const chip = document.createElement("button");
@@ -1209,14 +1222,18 @@ function addSuggestedPrompts() {
     chip.className = "suggested-chip";
     chip.textContent = prompt;
     chip.addEventListener("click", () => {
-      wrap.remove();
+      hideSuggestedPrompts();
       sendMessage(prompt);
     });
-    wrap.appendChild(chip);
+    suggestedPromptsFixed.appendChild(chip);
   });
 
-  msgs.appendChild(wrap);
-  msgs.scrollTop = msgs.scrollHeight;
+  suggestedPromptsFixed.hidden = false;
+}
+
+function hideSuggestedPrompts() {
+  suggestedPromptsFixed.hidden = true;
+  suggestedPromptsFixed.innerHTML = "";
 }
 
 function addBubble(role, text, imageDataUrls) {
@@ -1447,6 +1464,7 @@ chatForm.addEventListener("submit", (e) => {
   pendingImages = [];
   photoInput.value = "";
   renderImagePreview();
+  hideSuggestedPrompts();
   sendMessage(text || "What's in this photo?", imagesToSend);
 });
 </script>
