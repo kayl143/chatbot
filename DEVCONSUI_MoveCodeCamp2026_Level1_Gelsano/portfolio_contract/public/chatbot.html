@@ -404,9 +404,16 @@
     gap: 2px;
   }
 
+  .conv-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
   .conv-item {
     display: block;
     width: 100%;
+    min-width: 0;
+    flex: 1;
     text-align: left;
     border: none;
     background: transparent;
@@ -429,6 +436,38 @@
     font-size: 11px;
     color: var(--ink-soft);
   }
+  .conv-delete-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    color: var(--ink-soft);
+    cursor: pointer;
+  }
+  .conv-delete-btn:hover { background: var(--paper); color: #e0524f; }
+  .conv-delete-btn svg { width: 15px; height: 15px; }
+
+  .clear-history-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 8px 10px;
+    margin: 0 0 4px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+  }
+  .clear-history-btn:hover { background: var(--paper); color: #e0524f; }
+  .clear-history-btn svg { width: 13px; height: 13px; }
 
   .conv-empty {
     padding: 20px 14px;
@@ -728,7 +767,7 @@
       <button type="button" id="guest-btn" class="guest-link">Continue as guest</button>
     </div>
 
-    <p class="apk-note">Packaging this as an APK? Google sign-in needs a Custom Tab / Chrome-backed WebView, not a plain embedded one — see the note below the code.</p>
+    <p class="apk-note"></p>
   </div>
 
   <!-- ================= CHAT VIEW ================= -->
@@ -774,6 +813,10 @@
       <button id="new-chat-btn" class="new-chat-btn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         New chat
+      </button>
+      <button id="clear-history-btn" class="clear-history-btn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Clear all history
       </button>
       <div id="conv-list" class="conv-list"></div>
     </aside>
@@ -835,6 +878,7 @@ import {
   query,
   orderBy,
   getDocs,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -885,6 +929,7 @@ const drawer = document.getElementById("drawer");
 const drawerOverlay = document.getElementById("drawer-overlay");
 const drawerClose = document.getElementById("drawer-close");
 const newChatBtn = document.getElementById("new-chat-btn");
+const clearHistoryBtn = document.getElementById("clear-history-btn");
 const convList = document.getElementById("conv-list");
 
 let mode = "signin"; // or "signup"
@@ -1179,6 +1224,9 @@ async function renderConvList(uid) {
     }
     convList.innerHTML = "";
     convos.forEach((conv) => {
+      const row = document.createElement("div");
+      row.className = "conv-row";
+
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "conv-item" + (conv.id === currentConvId ? " active" : "");
@@ -1191,7 +1239,21 @@ async function renderConvList(uid) {
       btn.appendChild(title);
       btn.appendChild(meta);
       btn.addEventListener("click", () => loadConversation(uid, conv.id));
-      convList.appendChild(btn);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "conv-delete-btn";
+      delBtn.title = "Delete conversation";
+      delBtn.setAttribute("aria-label", "Delete conversation");
+      delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+      delBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        deleteConversation(uid, conv.id);
+      });
+
+      row.appendChild(btn);
+      row.appendChild(delBtn);
+      convList.appendChild(row);
     });
   } catch (err) {
     console.error("Failed to render conversation list:", err);
@@ -1199,8 +1261,47 @@ async function renderConvList(uid) {
   }
 }
 
+async function deleteConversationDocs(uid, convId) {
+  const snap = await getDocs(messagesCollection(uid, convId));
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+  await deleteDoc(doc(db, "chats", uid, "conversations", convId));
+}
+
+async function deleteConversation(uid, convId) {
+  if (!window.confirm("Delete this conversation? This can't be undone.")) return;
+  try {
+    await deleteConversationDocs(uid, convId);
+    if (convId === currentConvId) {
+      // The current chat was just deleted — move to whatever's left, or start fresh.
+      await openMostRecentOrNewConversation(uid);
+    } else {
+      await renderConvList(uid);
+    }
+  } catch (err) {
+    console.error("Failed to delete conversation:", err);
+    alert("Couldn't delete that conversation. Please try again.");
+  }
+}
+
+async function clearAllHistory(uid) {
+  if (!window.confirm("Delete ALL of your chat history? This can't be undone.")) return;
+  try {
+    const convos = await fetchConversations(uid);
+    await Promise.all(convos.map((conv) => deleteConversationDocs(uid, conv.id)));
+    await startNewConversation(uid);
+    await renderConvList(uid);
+  } catch (err) {
+    console.error("Failed to clear history:", err);
+    alert("Couldn't clear your history. Please try again.");
+  }
+}
+
 newChatBtn.addEventListener("click", () => {
   if (currentUid) startNewConversation(currentUid);
+});
+
+clearHistoryBtn.addEventListener("click", () => {
+  if (currentUid) clearAllHistory(currentUid);
 });
 
 // ---------------- Chat logic ----------------
