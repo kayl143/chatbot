@@ -81,7 +81,7 @@
     flex-shrink: 0;
     display: block;
   }
-  .mark { width: 34px; height: 34px; }
+  .mark { width: 40px; height: 40px; }
   .mark-lg {
     width: 60px;
     height: 60px;
@@ -307,19 +307,19 @@
   .chat-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
+    gap: 12px;
+    padding: 18px 18px;
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
     background: var(--card);
   }
 
   .icon-btn {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border: none;
     background: transparent;
-    border-radius: 8px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -329,7 +329,7 @@
     transition: background 0.15s ease, color 0.15s ease;
   }
   .icon-btn:hover { background: var(--paper); color: var(--ink); }
-  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn svg { width: 22px; height: 22px; }
 
   /* ---------- History drawer ---------- */
   .drawer-overlay {
@@ -480,13 +480,13 @@
   .chat-header .app-name {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 15px;
+    font-size: 18px;
     margin: 0;
     color: var(--ink);
     flex: 1;
   }
   .chat-header .status {
-    font-size: 11px;
+    font-size: 12.5px;
     color: var(--online);
     font-weight: 500;
     display: flex;
@@ -495,8 +495,8 @@
   }
   .chat-header .status::before {
     content: "";
-    width: 6px;
-    height: 6px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: var(--online);
   }
@@ -506,27 +506,27 @@
     align-items: center;
     gap: 8px;
     cursor: pointer;
-    padding: 4px 6px 4px 4px;
-    border-radius: 20px;
+    padding: 5px 8px 5px 5px;
+    border-radius: 24px;
     border: none;
     background: transparent;
   }
   .user-chip:hover { background: var(--paper); }
   .user-avatar {
-    width: 26px;
-    height: 26px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: var(--accent-soft);
     color: var(--accent-dark);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .signout-icon {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     color: var(--ink-soft);
   }
 
@@ -657,8 +657,9 @@
 
   .input-bar {
     display: flex;
-    gap: 8px;
-    padding: 12px;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
     border-top: 1px solid var(--line);
     flex-shrink: 0;
     background: var(--card);
@@ -666,18 +667,18 @@
 
   .input-bar input {
     flex: 1;
-    padding: 11px 14px;
+    padding: 14px 18px;
     border: 1.5px solid var(--line);
-    border-radius: 22px;
-    font-size: 14px;
+    border-radius: 26px;
+    font-size: 16px;
     outline: none;
     background: var(--paper);
   }
   .input-bar input:focus { border-color: var(--accent); background: var(--card); }
 
   .input-bar button {
-    width: 42px;
-    height: 42px;
+    width: 50px;
+    height: 50px;
     flex-shrink: 0;
     border: none;
     border-radius: 50%;
@@ -693,7 +694,7 @@
   .input-bar button:hover { box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.65); }
   .input-bar button:active { transform: scale(0.94); }
   .input-bar button:disabled { opacity: 0.5; cursor: default; box-shadow: none; }
-  .input-bar button svg { width: 17px; height: 17px; }
+  .input-bar button svg { width: 20px; height: 20px; }
 
   @media (prefers-reduced-motion: reduce) {
     .typing-dots span { animation: none; }
@@ -1305,19 +1306,39 @@ clearHistoryBtn.addEventListener("click", () => {
 });
 
 // ---------------- Chat logic ----------------
-const SUGGESTED_PROMPTS = [
+// Pool of possible suggestion chips — a random set of 4 is picked
+// each time a fresh/empty conversation is shown.
+const SUGGESTED_PROMPTS_POOL = [
   "What can you help me with?",
   "Give me a fun fact",
   "Help me write a message",
   "Tell me a joke",
+  "Recommend a good movie",
+  "Help me plan my day",
+  "Explain something in simple terms",
+  "Give me a motivational quote",
+  "Help me brainstorm ideas",
+  "What's a fun riddle?",
+  "Give me a recipe idea",
+  "Help me write a caption",
 ];
+
+function getRandomSuggestedPrompts(count = 4) {
+  const pool = [...SUGGESTED_PROMPTS_POOL];
+  const picked = [];
+  while (picked.length < count && pool.length) {
+    const i = Math.floor(Math.random() * pool.length);
+    picked.push(pool.splice(i, 1)[0]);
+  }
+  return picked;
+}
 
 const suggestedPromptsFixed = document.getElementById("suggested-prompts-fixed");
 
 function addSuggestedPrompts() {
   suggestedPromptsFixed.innerHTML = "";
 
-  SUGGESTED_PROMPTS.forEach((prompt) => {
+  getRandomSuggestedPrompts(4).forEach((prompt) => {
     const chip = document.createElement("button");
     chip.type = "button";
     chip.className = "suggested-chip";
