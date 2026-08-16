@@ -82,7 +82,7 @@
     }
 
     /* Scale down header, buttons, chips, and bubbles for phone-sized screens */
-    .chat-header { padding: 12px 14px; gap: 8px; }
+    .chat-header { padding: 12px 14px; padding-top: calc(12px + env(safe-area-inset-top, 0px)); gap: 8px; }
     .chat-header .app-name { font-size: 15px; }
     .chat-header .status { font-size: 11px; }
     .icon-btn { width: 34px; height: 34px; border-radius: 8px; }
@@ -98,10 +98,29 @@
     .suggested-prompts { gap: 6px; }
     .suggested-chip { font-size: 11.5px; padding: 6px 11px; }
 
-    .input-bar { padding: 10px 12px; gap: 8px; }
+    .input-bar { padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
     .input-bar input { padding: 10px 14px; font-size: 16px; }
     .input-bar button { width: 42px; height: 42px; }
     .input-bar button svg { width: 17px; height: 17px; }
+  }
+
+  /* ---------- Small phones (<=380px) ---------- */
+  @media (max-width: 380px) {
+    .chat-header { padding: 10px 10px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
+    .chat-header .app-name { font-size: 14px; }
+    .chat-header .status { font-size: 10.5px; }
+    .icon-btn { width: 32px; height: 32px; }
+    .icon-btn svg { width: 17px; height: 17px; }
+    .user-avatar { width: 24px; height: 24px; font-size: 10.5px; }
+
+    .messages { padding: 12px 10px; gap: 8px; }
+    .bubble { font-size: 12.5px; padding: 7px 11px; }
+
+    .suggested-prompts-fixed { padding: 6px 10px; gap: 5px; }
+    .suggested-chip { font-size: 11px; padding: 6px 10px; }
+
+    .input-bar { padding: 8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
+    .input-bar button { width: 38px; height: 38px; }
   }
 
   button { font-family: inherit; }
@@ -346,6 +365,7 @@
     align-items: center;
     gap: 12px;
     padding: 18px 18px;
+    padding-top: calc(18px + env(safe-area-inset-top, 0px));
     border-bottom: 1px solid var(--line);
     flex-shrink: 0;
     background: var(--card);
@@ -697,6 +717,7 @@
     align-items: center;
     gap: 10px;
     padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid var(--line);
     flex-shrink: 0;
     background: var(--card);
