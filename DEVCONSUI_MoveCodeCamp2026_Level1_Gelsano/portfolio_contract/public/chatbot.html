@@ -622,13 +622,37 @@
     border-bottom-left-radius: 4px;
   }
 
+  .suggested-prompts-fixed-wrap {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .suggested-prompts-fixed-wrap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 32px;
+    background: linear-gradient(to right, transparent, var(--card));
+    pointer-events: none;
+  }
+  .suggested-prompts-fixed-wrap[hidden]::after { display: none; }
+
   .suggested-prompts-fixed {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     padding: 10px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
     background: var(--card);
     border-top: 1px solid var(--line);
+  }
+  .suggested-prompts-fixed::-webkit-scrollbar { display: none; }
+  .suggested-prompts-fixed .suggested-chip {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .suggested-prompts {
@@ -848,7 +872,9 @@
 
     <div id="image-preview" class="image-preview" hidden></div>
 
-    <div id="suggested-prompts-fixed" class="suggested-prompts-fixed" hidden></div>
+    <div id="suggested-prompts-fixed-wrap" class="suggested-prompts-fixed-wrap" hidden>
+      <div id="suggested-prompts-fixed" class="suggested-prompts-fixed"></div>
+    </div>
 
     <form id="chat-form" class="input-bar">
       <button id="photo-btn" class="icon-btn" type="button" title="Take or attach a photo" aria-label="Take or attach a photo">
@@ -1392,6 +1418,7 @@ function getRandomSuggestedPrompts(count = 4) {
 }
 
 const suggestedPromptsFixed = document.getElementById("suggested-prompts-fixed");
+const suggestedPromptsFixedWrap = document.getElementById("suggested-prompts-fixed-wrap");
 
 function addSuggestedPrompts() {
   suggestedPromptsFixed.innerHTML = "";
@@ -1408,11 +1435,11 @@ function addSuggestedPrompts() {
     suggestedPromptsFixed.appendChild(chip);
   });
 
-  suggestedPromptsFixed.hidden = false;
+  suggestedPromptsFixedWrap.hidden = false;
 }
 
 function hideSuggestedPrompts() {
-  suggestedPromptsFixed.hidden = true;
+  suggestedPromptsFixedWrap.hidden = true;
   suggestedPromptsFixed.innerHTML = "";
 }
 
