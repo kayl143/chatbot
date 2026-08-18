@@ -98,10 +98,10 @@
     .suggested-prompts { gap: 6px; }
     .suggested-chip { font-size: 11.5px; padding: 6px 11px; }
 
-    .input-bar { padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 8px; }
+    .input-bar { padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
     .input-bar input { padding: 10px 14px; font-size: 16px; }
-    .input-bar button { width: 42px; height: 42px; }
-    .input-bar button svg { width: 17px; height: 17px; }
+    .input-bar button { width: 38px; height: 38px; }
+    .input-bar button svg { width: 15px; height: 15px; }
   }
 
   /* ---------- Small phones (<=380px) ---------- */
@@ -119,8 +119,9 @@
     .suggested-prompts-fixed { padding: 6px 10px; gap: 5px; }
     .suggested-chip { font-size: 11px; padding: 6px 10px; }
 
-    .input-bar { padding: 8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 6px; }
-    .input-bar button { width: 38px; height: 38px; }
+    .input-bar { padding: 8px 10px; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); gap: 5px; }
+    .input-bar button { width: 34px; height: 34px; }
+    .input-bar button svg { width: 14px; height: 14px; }
   }
 
   button { font-family: inherit; }
@@ -749,6 +750,7 @@
 
   .input-bar input {
     flex: 1;
+    min-width: 0;
     padding: 14px 18px;
     border: 1.5px solid var(--line);
     border-radius: 26px;
@@ -759,8 +761,8 @@
   .input-bar input:focus { border-color: var(--accent); background: var(--card); }
 
   .input-bar button {
-    width: 50px;
-    height: 50px;
+    width: 46px;
+    height: 46px;
     flex-shrink: 0;
     border: none;
     border-radius: 50%;
@@ -1528,8 +1530,14 @@ async function sendMessage(text, imageDataUrls) {
     history.push({ role: "assistant", content: reply });
     if (currentConvId) saveMessage(user.uid, currentConvId, "assistant", reply);
   } catch (err) {
-    thinking.textContent = "Couldn't reach BAI. Check your connection or backend.";
     console.error(err);
+    if (err.message === "Not signed in" || err.message.includes("session expired")) {
+      thinking.textContent = err.message;
+    } else if (err.name === "TypeError") {
+      thinking.textContent = "Couldn't reach BAI's server. It may be waking up — try again in a few seconds.";
+    } else {
+      thinking.textContent = "BAI hit an error: " + err.message;
+    }
   } finally {
     setLoading(false);
   }
